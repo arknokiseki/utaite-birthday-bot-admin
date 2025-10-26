@@ -5,15 +5,14 @@ import clientPromise from './mongodb';
 import { BirthdaySchema, CreateBirthdaySchema } from './definitions';
 import { ObjectId } from 'mongodb';
 import { cookies } from 'next/headers';
-import { z } from 'zod';
 
 type State = {
     success?: boolean;
     errors?: {
-        id?: { errors: string[] };
-        utaiteName?: { errors: string[] };
-        birthday?: { errors: string[] };
-        twitterLink?: { errors: string[] };
+        id?: string[];
+        utaiteName?: string[];
+        birthday?: string[];
+        twitterLink?: string[];
     };
     message: string;
 };
@@ -28,6 +27,7 @@ type Birthday = {
 
 async function checkAuth(): Promise<void> {
     const authCookie = (await cookies()).get('auth');
+
     if (!authCookie || authCookie.value !== 'true') {
         throw new Error('Not authenticated.');
     }
@@ -71,11 +71,10 @@ export async function createBirthday(
     });
 
     if (!validatedFields.success) {
-        const errorTree = z.treeifyError(validatedFields.error);
-        console.error("Zod Validation Error:", errorTree);
+        console.error("Zod Validation Error:", validatedFields.error.flatten());
         return {
             success: false,
-            errors: errorTree.properties,
+            errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to create birthday. Please check the fields.',
         };
     }
@@ -124,11 +123,10 @@ export async function updateBirthday(
     });
     
     if (!validatedFields.success) {
-        const errorTree = z.treeifyError(validatedFields.error);
-        console.error("Zod Validation Error:", errorTree);
+        console.error("Zod Validation Error:", validatedFields.error.flatten());
         return {
             success: false,
-            errors: errorTree.properties,
+            errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to update birthday. Please check the fields.',
         };
     }

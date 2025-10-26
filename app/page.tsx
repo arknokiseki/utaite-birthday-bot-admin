@@ -1,8 +1,6 @@
 import { getBirthdays } from "@/lib/actions";
 import { BirthdayPageClient } from "@/components/birthday-page-client";
 
-export const dynamic = 'force-dynamic';
-
 export default async function Home() {
   const bdays = await getBirthdays();
 
