@@ -6,14 +6,8 @@ import { BirthdaySchema, CreateBirthdaySchema } from './definitions';
 import { ObjectId } from 'mongodb';
 import { cookies } from 'next/headers';
 
-class AuthError extends Error {
-  constructor(message = 'Authentication required.') {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
-
 type State = {
+    success?: boolean;
     errors?: {
         id?: string[];
         utaiteName?: string[];
@@ -23,25 +17,30 @@ type State = {
     message: string;
 };
 
-async function checkAuth() {
+type Birthday = {
+    _id: ObjectId;
+    utaiteName: string;
+    birthday: string;
+    twitterLink: string;
+    createdAt: Date;
+};
+
+async function checkAuth(): Promise<void> {
     const authCookie = (await cookies()).get('auth');
-    if (!authCookie) {
-        throw new AuthError('Session expired. Please log in again.');
+
+    if (!authCookie || authCookie.value !== 'true') {
+        throw new Error('Not authenticated.');
     }
 }
 
 const getBirthdaysCollection = async () => {
-    if (!process.env.MONGODB_DB || !process.env.MONGODB_COLLECTION_NAME) {
-        throw new Error('Server configuration error: MONGODB_DB_NAME or MONGODB_COLLECTION_NAME is not set.');
-    }
-    
-    await checkAuth();
+    await checkAuth(); 
     const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DB);
-    return db.collection(process.env.MONGODB_COLLECTION_NAME);
+    const db = client.db();
+    return db.collection<Birthday>('birthdays');
 };
 
-export async function getBirthdays() {
+export async function getBirthdays(): Promise<Birthday[]> {
     try {
         const collection = await getBirthdaysCollection();
         const birthdays = await collection.find({})
@@ -51,24 +50,20 @@ export async function getBirthdays() {
 
         return JSON.parse(JSON.stringify(birthdays));
     } catch (error) {
-        console.error('getBirthdays failed:', error);
-        if (error instanceof AuthError) {
-             throw new Error(error.message);
+        if (error instanceof Error) {
+            console.error('getBirthdays failed:', error.message);
+            if (error.message.includes('Not authenticated')) {
+                throw new Error('Session expired or not authenticated.');
+            }
         }
-        throw new Error('Failed to fetch data from the server.');
+        throw new Error('Failed to fetch birthdays.');
     }
 }
 
-export async function createBirthday(_prevState: State, formData: FormData): Promise<State> {
-    try {
-        await checkAuth();
-    } catch (error) {
-        if (error instanceof AuthError) {
-            return { message: error.message };
-        }
-        return { message: 'An unexpected authentication error occurred.' };
-    }
-
+export async function createBirthday(
+    _prevState: State, 
+    formData: FormData
+): Promise<State> {
     const validatedFields = CreateBirthdaySchema.safeParse({
         utaiteName: formData.get('utaiteName'),
         birthday: formData.get('birthday'),
@@ -76,7 +71,9 @@ export async function createBirthday(_prevState: State, formData: FormData): Pro
     });
 
     if (!validatedFields.success) {
+        console.error("Zod Validation Error:", validatedFields.error.flatten());
         return {
+            success: false,
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to create birthday. Please check the fields.',
         };
@@ -91,29 +88,33 @@ export async function createBirthday(_prevState: State, formData: FormData): Pro
             birthday,
             twitterLink,
             createdAt: new Date(),
-        });
-    } catch (error) { 
-        console.error('Database Error (Create):', error);
-        if (error instanceof AuthError) {
-             return { message: error.message };
+        } as Birthday);
+        
+        revalidatePath('/');
+        return { 
+            success: true,
+            message: 'Successfully created birthday.' 
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.includes('Not authenticated')) {
+                return { 
+                    success: false,
+                    message: 'Error: Not authenticated.' 
+                };
+            }
         }
-        return { message: 'Database Error: Failed to create birthday.' };
+        return { 
+            success: false,
+            message: 'Database Error: Failed to create birthday.' 
+        };
     }
-
-    revalidatePath('/');
-    return { message: 'Successfully created birthday.' };
 }
 
-export async function updateBirthday(_prevState: State, formData: FormData): Promise<State> {
-    try {
-        await checkAuth();
-    } catch (error) {
-        if (error instanceof AuthError) {
-            return { message: error.message };
-        }
-        return { message: 'An unexpected authentication error occurred.' };
-    }
-    
+export async function updateBirthday(
+    _prevState: State, 
+    formData: FormData
+): Promise<State> {
     const validatedFields = BirthdaySchema.safeParse({
         id: formData.get('id'),
         utaiteName: formData.get('utaiteName'),
@@ -122,7 +123,9 @@ export async function updateBirthday(_prevState: State, formData: FormData): Pro
     });
     
     if (!validatedFields.success) {
+        console.error("Zod Validation Error:", validatedFields.error.flatten());
         return {
+            success: false,
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Failed to update birthday. Please check the fields.',
         };
@@ -130,53 +133,92 @@ export async function updateBirthday(_prevState: State, formData: FormData): Pro
     
     const { id, utaiteName, birthday, twitterLink } = validatedFields.data;
 
-    if (!id) {
-        return { message: 'Missing ID for update.' };
+    if (typeof id !== 'string' || id.length === 0) {
+        return { 
+            success: false,
+            message: 'Missing or invalid ID for update.' 
+        };
     }
+
+    const dataToUpdate = {
+        utaiteName,
+        birthday,
+        twitterLink,
+    };
 
     try {
         const collection = await getBirthdaysCollection();
-        await collection.updateOne(
+        const result = await collection.updateOne(
             { _id: new ObjectId(id) },
-            { $set: { utaiteName, birthday, twitterLink } }
+            { $set: dataToUpdate }
         );
-    } catch (error) {
-        console.error('Database Error (Update):', error);
-        if (error instanceof AuthError) {
-             return { message: error.message };
+        
+        if (result.matchedCount === 0) {
+            return { 
+                success: false,
+                message: 'Birthday not found.' 
+            };
         }
-        return { message: 'Database Error: Failed to update birthday.' };
+        
+        revalidatePath('/');
+        return { 
+            success: true,
+            message: 'Successfully updated birthday.' 
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.includes('Not authenticated')) {
+                return { 
+                    success: false,
+                    message: 'Error: Not authenticated.' 
+                };
+            }
+        }
+        return { 
+            success: false,
+            message: 'Database Error: Failed to update birthday.' 
+        };
     }
-    
-    revalidatePath('/');
-    return { message: 'Successfully updated birthday.' };
 }
 
-export async function deleteBirthday(id: string): Promise<{ message: string }> {
-    try {
-        await checkAuth();
-    } catch (error) {
-        if (error instanceof AuthError) {
-            return { message: error.message };
-        }
-        return { message: 'An unexpected authentication error occurred.' };
-    }
-
+export async function deleteBirthday(id: string): Promise<State> {
     if (!id) {
-        return { message: 'Missing ID for deletion.' };
+        return { 
+            success: false,
+            message: 'Missing ID for deletion.' 
+        };
     }
 
     try {
         const collection = await getBirthdaysCollection();
-        await collection.deleteOne({ _id: new ObjectId(id) });
-    } catch (error) {
-        console.error('Database Error (Delete):', error);
-        if (error instanceof AuthError) {
-             return { message: error.message };
+        const result = await collection.deleteOne({ 
+            _id: new ObjectId(id) 
+        });
+        
+        if (result.deletedCount === 0) {
+            return { 
+                success: false,
+                message: 'Birthday not found.' 
+            };
         }
-        return { message: 'Database Error: Failed to delete birthday.' };
+        
+        revalidatePath('/');
+        return { 
+            success: true,
+            message: 'Successfully deleted birthday.' 
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.includes('Not authenticated')) {
+                return { 
+                    success: false,
+                    message: 'Error: Not authenticated.' 
+                };
+            }
+        }
+        return { 
+            success: false,
+            message: 'Database Error: Failed to delete birthday.' 
+        };
     }
-    
-    revalidatePath('/');
-    return { message: 'Successfully deleted birthday.' };
 }
