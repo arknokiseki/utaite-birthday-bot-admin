@@ -35,6 +35,7 @@ function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
 
 type ActionState = {
     message: string;
+    success?: boolean;
     errors?: {
         id?: { errors: string[] };
         utaiteName?: { errors: string[] };
@@ -46,11 +47,13 @@ type ActionState = {
 export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: BirthdayFormProps) {
     const isEditMode = !!birthday;
     const action = isEditMode ? updateBirthday : createBirthday;
+    // FIXED: Changed _D back to _id
     const previousBirthdayIdRef = useRef(birthday?._id?.toString() || '');
     const router = useRouter();
 
     const initialState: ActionState = { message: "", errors: {} };
-    const [state, dispatch] = useActionState(action, initialState as any);
+    // Removed the 'as any' cast
+    const [state, dispatch] = useActionState(action, initialState);
 
     const { register, formState: { errors }, reset } = useForm({
         resolver: zodResolver(BirthdaySchema),
