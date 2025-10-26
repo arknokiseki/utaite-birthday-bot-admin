@@ -34,12 +34,13 @@ function SubmitButton({ isEditMode }: { isEditMode: boolean }) {
 }
 
 type ActionState = {
+    success?: boolean;
     message: string;
     errors?: {
-        id?: { errors: string[] };
-        utaiteName?: { errors: string[] };
-        birthday?: { errors: string[] };
-        twitterLink?: { errors: string[] };
+        id?: string[];
+        utaiteName?: string[];
+        birthday?: string[];
+        twitterLink?: string[];
     };
 };
 
@@ -50,7 +51,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
     const router = useRouter();
 
     const initialState: ActionState = { message: "", errors: {} };
-    const [state, dispatch] = useActionState(action, initialState as any);
+    const [state, dispatch] = useActionState(action, initialState);
 
     const { register, formState: { errors }, reset } = useForm({
         resolver: zodResolver(BirthdaySchema),
@@ -101,17 +102,17 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                         <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                             <Label htmlFor="utaiteName" className="sm:text-right">Name</Label>
                             <Input id="utaiteName" {...register("utaiteName")} className="sm:col-span-3 w-full" />
-                            {(errors.utaiteName || state.errors?.utaiteName) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.utaiteName?.message || state.errors?.utaiteName?.errors[0]}</p>}
+                            {(errors.utaiteName || state.errors?.utaiteName) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.utaiteName?.message || state.errors?.utaiteName?.[0]}</p>}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                             <Label htmlFor="birthday" className="sm:text-right">Birthday</Label>
                             <Input id="birthday" placeholder="YYYY-MM-DD or MM-DD" {...register("birthday")} className="sm:col-span-3 w-full" />
-                            {(errors.birthday || state.errors?.birthday) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.birthday?.message || state.errors?.birthday?.errors[0]}</p>}
+                            {(errors.birthday || state.errors?.birthday) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.birthday?.message || state.errors?.birthday?.[0]}</p>}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                             <Label htmlFor="twitterLink" className="sm:text-right">Twitter URL</Label>
                             <Input id="twitterLink" placeholder="https://twitter.com/..." {...register("twitterLink")} className="sm:col-span-3 w-full" />
-                            {(errors.twitterLink || state.errors?.twitterLink) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.twitterLink?.message || state.errors?.twitterLink?.errors[0]}</p>}
+                            {(errors.twitterLink || state.errors?.twitterLink) && <p className="sm:col-span-4 text-sm text-red-500 text-right">{errors.twitterLink?.message || state.errors?.twitterLink?.[0]}</p>}
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
