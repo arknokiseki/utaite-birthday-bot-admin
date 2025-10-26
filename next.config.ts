@@ -18,6 +18,10 @@ const securityHeaders = [
   }
 ];
 
+// const withBundleAnalyzer = require('@next/bundle-analyzer')({
+//   enabled: process.env.ANALYZE === 'true',
+// })
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -29,4 +33,5 @@ const nextConfig: NextConfig = {
   },
 };
 
+// export default withBundleAnalyzer(nextConfig);
 export default nextConfig;

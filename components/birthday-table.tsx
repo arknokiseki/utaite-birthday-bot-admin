@@ -266,7 +266,7 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                             paginatedBirthdays.map((bday) => (
                                 <TableRow key={bday._id.toString()}>
                                     <TableCell className="font-medium">
-                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline" aria-label="Visit -hotoke-'s page on the wiki">
                                             {bday.utaiteName}
                                         </Link>
                                     </TableCell>
@@ -310,7 +310,7 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                             <div className="flex items-start justify-between gap-2">
                                 <div>
                                     <div className="font-medium text-base">
-                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline" aria-label={`Visit ${bday.utaiteName}'s page on the wiki`}>
                                             {bday.utaiteName}
                                         </Link>
                                     </div>
