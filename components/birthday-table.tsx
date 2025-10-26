@@ -360,8 +360,8 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setBirthdayToDelete(null)}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmDelete}>Continue</AlertDialogAction>
-S                </AlertDialogFooter>
+                    <AlertDialogAction className="hover:cursor-pointer" onClick={handleConfirmDelete}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
         </>
