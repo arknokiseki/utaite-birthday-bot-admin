@@ -75,6 +75,7 @@ export function PaginationControls({
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
+                            aria-label="First Page"
                             className="hidden h-8 w-8 p-0 lg:flex"
                             onClick={() => goToPage(1)}
                             disabled={currentPage === 1}
@@ -84,6 +85,7 @@ export function PaginationControls({
                         </Button>
                         <Button
                             variant="outline"
+                            aria-label="Previous Page"
                             className="h-8 w-8 p-0"
                             onClick={() => goToPage(currentPage - 1)}
                             disabled={currentPage === 1}
@@ -94,6 +96,7 @@ export function PaginationControls({
                         <Button
                             variant="outline"
                             className="h-8 w-8 p-0"
+                            aria-label="Next Page"
                             onClick={() => goToPage(currentPage + 1)}
                             disabled={currentPage === totalPages}
                         >
@@ -102,6 +105,7 @@ export function PaginationControls({
                         </Button>
                         <Button
                             variant="outline"
+                            aria-label="Last Page"
                             className="hidden h-8 w-8 p-0 lg:flex"
                             onClick={() => goToPage(totalPages)}
                             disabled={currentPage === totalPages}

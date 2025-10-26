@@ -20,7 +20,7 @@ export function Navbar() {
                 </h1>
                 <div className="flex items-center space-x-2">
                     <ThemeToggle />
-                    <Button onClick={handleLogout} variant="outline" className="ml-2 cursor-pointer">Logout</Button>
+                    <Button aria-label="Log out" onClick={handleLogout} variant="outline" className="ml-2 cursor-pointer">Logout</Button>
                 </div>
             </div>
         </nav>

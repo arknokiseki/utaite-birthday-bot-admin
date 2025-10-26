@@ -92,7 +92,7 @@ const Header = ({
 
     return (
         <TableHead className={className}>
-            <Button variant="ghost" onClick={handleClick}>
+            <Button aria-label="Sort" variant="ghost" onClick={handleClick}>
                 {children}
                 <ArrowUpDown className={`ml-2 h-4 w-4 ${isSorted ? 'text-blue-500' : ''}`} />
             </Button>
@@ -225,7 +225,7 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
     return (
         <>
         <div className="flex justify-end mb-4">
-            <Button className='cursor-pointer' onClick={handleAdd}>Add Birthday</Button>
+            <Button aria-label="Add Birthday" className='cursor-pointer' onClick={handleAdd}>Add Birthday</Button>
         </div>
 
         {isLoading ? (
@@ -273,14 +273,14 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                                     <TableCell>{bday.birthday}</TableCell>
                                     <TableCell>
                                         {bday.twitterLink ? (
-                                            <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                            <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
-                                            </a>
+                                            <Link href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline" aria-label={`Visit ${bday.utaiteName}'s Twitter profile`}>
+                                                <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
+                                            </Link>
                                         ) : ('N/A')}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="outline" size="sm" className="mr-2 cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
-                                        <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                                        <Button aria-label="Edit Birthday" variant="outline" size="sm" className="mr-2 cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
+                                        <Button aria-label="Delete Birthday" variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -319,14 +319,14 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                                 <div className="flex flex-col items-end space-y-2">
                                     <div>
                                         {bday.twitterLink ? (
-                                            <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                            <Link href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline" aria-label={`Visit ${bday.utaiteName}'s Twitter profile`}>
                                                 <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
-                                            </a>
+                                            </Link>
                                         ) : ('N/A')}
                                     </div>
                                     <div className="flex space-x-2">
-                                        <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
-                                        <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                                        <Button aria-label="Edit Birthday" variant="outline" size="sm" className="cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
+                                        <Button aria-label="Delete Birthday" variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
                                     </div>
                                 </div>
                             </div>

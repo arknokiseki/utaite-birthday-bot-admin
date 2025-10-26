@@ -60,7 +60,7 @@ export default function AuthPage() {
                             />
                         </div>
                         <div className="flex items-center justify-between pt-2">
-                            <Button type="submit" className="w-full cursor-pointer">
+                            <Button aria-label="Sign in" type="submit" className="w-full cursor-pointer">
                                 Sign In
                             </Button>
                         </div>
