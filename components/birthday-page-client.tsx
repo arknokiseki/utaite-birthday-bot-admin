@@ -8,6 +8,11 @@ import { Birthday, FilterValues } from '@/lib/definitions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
+
+config.autoAddCss = false
+
 interface BirthdayPageClientProps {
   initialBirthdays: Birthday[];
 }
@@ -32,7 +37,7 @@ export function BirthdayPageClient({ initialBirthdays }: BirthdayPageClientProps
       const bdays = await getBirthdays();
       setBirthdays(bdays);
     } catch (error) {
-      toast.error('Session expired. Please log in again.');
+      toast.error(`Session expired. Please log in again. \n${error}`);
       router.push('/auth');
     } finally {
       setIsLoading(false);
