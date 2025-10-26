@@ -8,11 +8,6 @@ import { Birthday, FilterValues } from '@/lib/definitions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { config } from '@fortawesome/fontawesome-svg-core'
-import '@fortawesome/fontawesome-svg-core/styles.css'
-
-config.autoAddCss = false
-
 interface BirthdayPageClientProps {
   initialBirthdays: Birthday[];
 }
