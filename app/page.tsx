@@ -3,6 +3,11 @@ import { BirthdayPageClient } from "@/components/birthday-page-client";
 
 export const dynamic = 'force-dynamic';
 
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
+
+config.autoAddCss = false
+
 export default async function Home() {
   const bdays = await getBirthdays();
 
