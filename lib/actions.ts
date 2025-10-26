@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import clientPromise from './mongodb';
 import { BirthdaySchema, CreateBirthdaySchema } from './definitions';
 import { ObjectId } from 'mongodb';
+import { cookies } from 'next/headers';
 
 type State = {
     errors?: {
@@ -15,23 +16,43 @@ type State = {
     message: string;
 };
 
+async function checkAuth() {
+    const authCookie = (await cookies()).get('auth');
+    if (!authCookie) {
+        throw new Error('Not authenticated.');
+    }
+}
+
 const getBirthdaysCollection = async () => {
+    await checkAuth(); 
     const client = await clientPromise;
     const db = client.db();
     return db.collection('birthdays');
 };
 
 export async function getBirthdays() {
-    const collection = await getBirthdaysCollection();
-    const birthdays = await collection.find({})
-        .collation({ locale: 'en', strength: 2 })
-        .sort({ utaiteName: 1 })
-        .toArray();
+    try {
+        await checkAuth(); 
+        const collection = await getBirthdaysCollection();
+        const birthdays = await collection.find({})
+            .collation({ locale: 'en', strength: 2 })
+            .sort({ utaiteName: 1 })
+            .toArray();
 
-    return JSON.parse(JSON.stringify(birthdays));
+        return JSON.parse(JSON.stringify(birthdays));
+    } catch (error) {
+        console.error('getBirthdays failed:', error);
+        throw new Error('Session expired or failed to fetch data.');
+    }
 }
 
-export async function createBirthday(prevState: State, formData: FormData) {
+export async function createBirthday(_prevState: State, formData: FormData) {
+    try {
+        await checkAuth();
+    } catch (error) {
+        return { message: 'Error: Not authenticated.' };
+    }
+
     const validatedFields = CreateBirthdaySchema.safeParse({
         utaiteName: formData.get('utaiteName'),
         birthday: formData.get('birthday'),
@@ -56,7 +77,10 @@ export async function createBirthday(prevState: State, formData: FormData) {
             twitterLink,
             createdAt: new Date(),
         });
-    } catch {
+    } catch (error: any) { 
+        if (error.message.includes('Not authenticated')) {
+             return { message: 'Error: Not authenticated.' };
+        }
         return { message: 'Database Error: Failed to create birthday.' };
     }
 
@@ -64,7 +88,13 @@ export async function createBirthday(prevState: State, formData: FormData) {
     return { message: 'Successfully created birthday.' };
 }
 
-export async function updateBirthday(prevState: State, formData: FormData) {
+export async function updateBirthday(_prevState: State, formData: FormData) {
+    try {
+        await checkAuth();
+    } catch (error) {
+        return { message: 'Error: Not authenticated.' };
+    }
+    
     const validatedFields = BirthdaySchema.safeParse({
         id: formData.get('id'),
         utaiteName: formData.get('utaiteName'),
@@ -98,7 +128,10 @@ export async function updateBirthday(prevState: State, formData: FormData) {
             { _id: new ObjectId(id) },
             { $set: dataToUpdate }
         );
-    } catch {
+    } catch (error: any) {
+        if (error.message.includes('Not authenticated')) {
+             return { message: 'Error: Not authenticated.' };
+        }
         return { message: 'Database Error: Failed to update birthday.' };
     }
     
@@ -107,12 +140,21 @@ export async function updateBirthday(prevState: State, formData: FormData) {
 }
 
 export async function deleteBirthday(id: string) {
+    try {
+        await checkAuth();
+    } catch (error) {
+        return { message: 'Error: Not authenticated.' };
+    }
+
     if (!id) return { message: 'Missing ID for deletion.' };
 
     try {
         const collection = await getBirthdaysCollection();
         await collection.deleteOne({ _id: new ObjectId(id) });
-    } catch {
+    } catch (error: any) {
+        if (error.message.includes('Not authenticated')) {
+             return { message: 'Error: Not authenticated.' };
+        }
         return { message: 'Database Error: Failed to delete birthday.' };
     }
     

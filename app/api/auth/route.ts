@@ -13,7 +13,10 @@ export async function POST(request: Request) {
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (isPasswordCorrect) {
             const response = NextResponse.json({ success: true });
-            response.cookies.set('auth', 'true', { httpOnly: true, maxAge: 60 * 60 });
+            response.cookies.set('auth', 'true', { 
+                httpOnly: true, 
+                maxAge: 60 * 60 * 8
+            });
             return response;
         }
     }

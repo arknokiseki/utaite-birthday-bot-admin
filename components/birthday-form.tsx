@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import { Birthday, BirthdaySchema } from '@/lib/definitions';
 import { createBirthday, updateBirthday } from '@/lib/actions';
@@ -36,6 +37,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
     const isEditMode = !!birthday;
     const action = isEditMode ? updateBirthday : createBirthday;
     const previousBirthdayIdRef = useRef(birthday?._id?.toString() || '');
+    const router = useRouter();
 
     const initialState = { message: "", errors: {} };
     const [state, dispatch] = useActionState(action, initialState);
@@ -56,10 +58,13 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
             onSuccess();
             setIsOpen(false);
             reset({ id: '', utaiteName: '', birthday: '', twitterLink: '' });
+        } else if (state.message?.startsWith('Error: Not authenticated')) {
+            toast.error('Session expired. Please log in again.');
+            router.push('/auth');
         } else if (state.message && state.message !== "") {
             toast.error(state.message);
         }
-    }, [state, setIsOpen, onSuccess, reset]);
+    }, [state, setIsOpen, onSuccess, reset, router]);
 
     useEffect(() => {
         const currentBirthdayId = birthday?._id?.toString() || '';
@@ -83,7 +88,6 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                 <form action={dispatch}>
                     {isEditMode && <input type="hidden" {...register("id")} />}
                     <div className="grid gap-4 py-4">
-                        {/* Responsive: single column on xs, label above; on sm+/md, labels right-aligned */}
                         <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
                             <Label htmlFor="utaiteName" className="sm:text-right">Name</Label>
                             <Input id="utaiteName" {...register("utaiteName")} className="sm:col-span-3 w-full" />

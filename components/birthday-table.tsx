@@ -210,7 +210,7 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
     
     const noDataMessage = useMemo(() => {
         const activeFilters = Object.entries(filters)
-            .filter(([key, value]) => value && value !== 'all')
+            .filter(([, value]) => value && value !== 'all')
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
 

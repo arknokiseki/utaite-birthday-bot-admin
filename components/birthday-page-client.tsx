@@ -5,13 +5,14 @@ import { getBirthdays } from "@/lib/actions";
 import { BirthdayTable } from "@/components/birthday-table";
 import { FilterControls } from "@/components/filter-controls";
 import { Birthday, FilterValues } from '@/lib/definitions';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface BirthdayPageClientProps {
   initialBirthdays: Birthday[];
 }
 
 export function BirthdayPageClient({ initialBirthdays }: BirthdayPageClientProps) {
-  // 1. Initial state is set from the server prop, not useEffect
   const [birthdays, setBirthdays] = useState<Birthday[]>(initialBirthdays);
   const [filters, setFilters] = useState<FilterValues>({
     name: 'all',
@@ -23,13 +24,20 @@ export function BirthdayPageClient({ initialBirthdays }: BirthdayPageClientProps
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const refreshBirthdays = useCallback(async () => {
     setIsLoading(true);
-    const bdays = await getBirthdays();
-    setBirthdays(bdays);
-    setIsLoading(false);
-  }, []);
+    try {
+      const bdays = await getBirthdays();
+      setBirthdays(bdays);
+    } catch (error) {
+      toast.error('Session expired. Please log in again.');
+      router.push('/auth');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
 
   return (
     <>
