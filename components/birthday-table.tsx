@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
-    Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,11 +20,44 @@ import { BirthdayForm } from './birthday-form';
 import { deleteBirthday } from '@/lib/actions';
 import { Birthday, FilterValues } from '@/lib/definitions';
 import { PaginationControls } from './pagination-controls';
-import { ArrowUpDown, Loader2 } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareTwitter } from '@fortawesome/free-brands-svg-icons'
+
+
+const SkeletonRow = () => (
+    <TableRow>
+        <TableCell><div className="h-5 w-32 rounded bg-muted animate-pulse" /></TableCell>
+        <TableCell><div className="h-5 w-24 rounded bg-muted animate-pulse" /></TableCell>
+        <TableCell><div className="h-5 w-8 rounded bg-muted animate-pulse" /></TableCell>
+        <TableCell className="text-right">
+            <div className="flex justify-end space-x-2">
+                <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+                <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+            </div>
+        </TableCell>
+    </TableRow>
+);
+
+const SkeletonCard = () => (
+    <div className="border rounded-md p-3 bg-card">
+        <div className="flex items-start justify-between gap-2">
+            <div>
+                <div className="h-5 w-28 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-20 rounded bg-muted animate-pulse mt-2" />
+            </div>
+            <div className="flex flex-col items-end space-y-2">
+                <div className="h-6 w-6 rounded bg-muted animate-pulse" />
+                <div className="flex space-x-2">
+                    <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+                    <div className="h-8 w-16 rounded bg-muted animate-pulse" />
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 type SortKey = 'utaiteName' | 'birthday';
 
@@ -190,101 +223,117 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
             <Button className='cursor-pointer' onClick={handleAdd}>Add Birthday</Button>
         </div>
 
-        {/* Desktop/table view (md+) */}
-        <div className="rounded-md border overflow-x-auto hidden md:block">
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <Header sortKey="utaiteName" sorting={sorting} setSorting={setSorting} className="min-w-[200px]">
-                        Name
-                    </Header>
-                    <Header sortKey="birthday" sorting={sorting} setSorting={setSorting} className="min-w-[160px]">
-                        Birthday
-                    </Header>
-                    <TableHead className="min-w-[120px]">Twitter</TableHead>
-                    <TableHead className="text-right min-w-[160px]">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {isLoading ? (
+        {isLoading ? (
+            <div className="rounded-md border overflow-x-auto hidden md:block">
+                <Table>
+                    <TableHeader>
                         <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                            </TableCell>
+                            <Header sortKey="utaiteName" sorting={sorting} setSorting={setSorting} className="min-w-[200px]">Name</Header>
+                            <Header sortKey="birthday" sorting={sorting} setSorting={setSorting} className="min-w-[160px]">Birthday</Header>
+                            <TableHead className="min-w-[120px]">Twitter</TableHead>
+                            <TableHead className="text-right min-w-[160px]">Actions</TableHead>
                         </TableRow>
-                    ) : paginatedBirthdays.length > 0 ? (
-                        paginatedBirthdays.map((bday) => (
-                            <TableRow key={bday._id.toString()}>
-                                <TableCell className="font-medium">
-                                    <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                        {bday.utaiteName}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{bday.birthday}</TableCell>
-                                <TableCell>
-                                    {bday.twitterLink ? (
-                                        <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                        <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
-                                        </a>
-                                    ) : ('N/A')}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="outline" size="sm" className="mr-2 cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
-                                    <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                    </TableHeader>
+                    <TableBody>
+                        {Array.from({ length: rowsPerPage }).map((_, i) => (
+                            <SkeletonRow key={i} />
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        ) : (
+            <div className="rounded-md border overflow-x-auto hidden md:block">
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <Header sortKey="utaiteName" sorting={sorting} setSorting={setSorting} className="min-w-[200px]">
+                            Name
+                        </Header>
+                        <Header sortKey="birthday" sorting={sorting} setSorting={setSorting} className="min-w-[160px]">
+                            Birthday
+                        </Header>
+                        <TableHead className="min-w-[120px]">Twitter</TableHead>
+                        <TableHead className="text-right min-w-[160px]">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedBirthdays.length > 0 ? (
+                            paginatedBirthdays.map((bday) => (
+                                <TableRow key={bday._id.toString()}>
+                                    <TableCell className="font-medium">
+                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                            {bday.utaiteName}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell>{bday.birthday}</TableCell>
+                                    <TableCell>
+                                        {bday.twitterLink ? (
+                                            <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                            <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
+                                            </a>
+                                        ) : ('N/A')}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="outline" size="sm" className="mr-2 cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
+                                        <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    {noDataMessage}
                                 </TableCell>
                             </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                                {noDataMessage}
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        )}
 
-        {/* Mobile/card view (below md) */}
-        <div className="md:hidden space-y-3">
-            {isLoading ? (
-                <div className="h-24 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            ) : paginatedBirthdays.length > 0 ? (
-                paginatedBirthdays.map((bday) => (
-                    <div key={bday._id.toString()} className="border rounded-md p-3 bg-card">
-                        <div className="flex items-start justify-between gap-2">
-                            <div>
-                                <div className="font-medium text-base">
-                                    <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                        {bday.utaiteName}
-                                    </Link>
-                                </div>
-                                <div className="text-sm text-muted-foreground">{bday.birthday}</div>
-                            </div>
-                            <div className="flex flex-col items-end space-y-2">
+        {isLoading ? (
+            <div className="md:hidden space-y-3">
+                {Array.from({ length: rowsPerPage }).map((_, i) => (
+                    <SkeletonCard key={i} />
+                ))}
+            </div>
+        ) : (
+            <div className="md:hidden space-y-3">
+                {paginatedBirthdays.length > 0 ? (
+                    paginatedBirthdays.map((bday) => (
+                        <div key={bday._id.toString()} className="border rounded-md p-3 bg-card">
+                            <div className="flex items-start justify-between gap-2">
                                 <div>
-                                    {bday.twitterLink ? (
-                                        <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                                            <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
-                                        </a>
-                                    ) : ('N/A')}
+                                    <div className="font-medium text-base">
+                                        <Link href={`https://utaite.miraheze.org/wiki/${bday.utaiteName}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                            {bday.utaiteName}
+                                        </Link>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">{bday.birthday}</div>
                                 </div>
-                                <div className="flex space-x-2">
-                                    <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
-                                    <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                                <div className="flex flex-col items-end space-y-2">
+                                    <div>
+                                        {bday.twitterLink ? (
+                                            <a href={bday.twitterLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                                <FontAwesomeIcon icon={faSquareTwitter} className='fa-lg' />
+                                            </a>
+                                        ) : ('N/A')}
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => handleEdit(bday)}>Edit</Button>
+                                        <Button variant="destructive" size="sm" className='cursor-pointer' onClick={() => handleDeleteClick(bday._id.toString())}>Delete</Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    ))
+                ) : (
+                    <div className="h-24 flex items-center justify-center">
+                        {noDataMessage}
                     </div>
-                ))
-            ) : (
-                <div className="h-24 flex items-center justify-center">
-                    {noDataMessage}
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        )}
 
         <PaginationControls
             totalRows={filteredAndSortedBirthdays.length}
@@ -312,7 +361,7 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setBirthdayToDelete(null)}>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleConfirmDelete}>Continue</AlertDialogAction>
-                </AlertDialogFooter>
+S                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
         </>
