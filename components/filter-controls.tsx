@@ -57,7 +57,7 @@ export function FilterControls({ filters, setFilters }: FilterControlsProps) {
 
                 <div className="flex flex-col">
                     <Label htmlFor="name-filter" className="mb-1">Name starts with</Label>
-                    <Select value={filters.name} onValueChange={(value) => handleFilterChange('name', value)}>
+                    <Select aria-label="Name filter" value={filters.name} onValueChange={(value) => handleFilterChange('name', value)}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -72,7 +72,7 @@ export function FilterControls({ filters, setFilters }: FilterControlsProps) {
 
                 <div className="flex flex-col">
                     <Label htmlFor="month-filter" className="mb-1">Month</Label>
-                    <Select value={filters.month} onValueChange={(value) => handleFilterChange('month', value)}>
+                    <Select aria-label="Month filter" value={filters.month} onValueChange={(value) => handleFilterChange('month', value)}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -86,7 +86,7 @@ export function FilterControls({ filters, setFilters }: FilterControlsProps) {
 
                 <div className="flex flex-col">
                     <Label htmlFor="day-filter" className="mb-1">Day</Label>
-                    <Select value={filters.day} onValueChange={(value) => handleFilterChange('day', value)}>
+                    <Select aria-label="Day filter" value={filters.day} onValueChange={(value) => handleFilterChange('day', value)}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -100,7 +100,7 @@ export function FilterControls({ filters, setFilters }: FilterControlsProps) {
 
                 <div className="flex flex-col">
                     <Label htmlFor="year-filter" className="mb-1">Has year</Label>
-                    <Select value={filters.year} onValueChange={(value) => handleFilterChange('year', value)}>
+                    <Select aria-label="Has year filter" value={filters.year} onValueChange={(value) => handleFilterChange('year', value)}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -114,7 +114,7 @@ export function FilterControls({ filters, setFilters }: FilterControlsProps) {
 
                 <div className="flex flex-col">
                     <Label htmlFor="twitter-filter" className="mb-1">Has Twitter</Label>
-                    <Select value={filters.twitter} onValueChange={(value) => handleFilterChange('twitter', value)}>
+                    <Select aria-label="Has Twitter filter" value={filters.twitter} onValueChange={(value) => handleFilterChange('twitter', value)}>
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
