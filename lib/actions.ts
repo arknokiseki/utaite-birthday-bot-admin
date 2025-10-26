@@ -1,248 +1,182 @@
-import { unstable_cache, revalidateTag } from 'next/cache';
-import { MongoClient, ObjectId } from 'mongodb';
-import { z, ZodError } from 'zod';
+'use server';
 
-import { Birthday, BirthdaySchema } from '@/lib/definitions';
+import { revalidatePath } from 'next/cache';
+import clientPromise from './mongodb';
+import { BirthdaySchema, CreateBirthdaySchema } from './definitions';
+import { ObjectId } from 'mongodb';
+import { cookies } from 'next/headers';
 
-type ActionState = {
-  success?: boolean;
-  message: string;
-  errors?: {
-    id?: string[];
-    utaiteName?: string[];
-    birthday?: string[];
-    twitterLink?: string[];
-  };
+class AuthError extends Error {
+  constructor(message = 'Authentication required.') {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+type State = {
+    errors?: {
+        id?: string[];
+        utaiteName?: string[];
+        birthday?: string[];
+        twitterLink?: string[];
+    };
+    message: string;
 };
 
-const MONGODB_URI = process.env.MONGODB_URI || '';
-const MONGODB_DB = process.env.MONGODB_DB || 'utaite-bot';
-const BIRTHDAYS_COLLECTION = 'birthdays';
-
-if (!MONGODB_URI) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    'MONGODB_URI is not set. Please configure it in your environment for /lib/actions.ts'
-  );
+async function checkAuth() {
+    const authCookie = (await cookies()).get('auth');
+    if (!authCookie) {
+        throw new AuthError('Session expired. Please log in again.');
+    }
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __mongoClientPromise: Promise<MongoClient> | undefined;
-}
-
-let clientPromise: Promise<MongoClient>;
-if (!global.__mongoClientPromise) {
-  const client = new MongoClient(MONGODB_URI);
-  global.__mongoClientPromise = client.connect();
-}
-clientPromise = global.__mongoClientPromise;
-
-async function getCollection() {
-  const client = await clientPromise;
-  const db = client.db(MONGODB_DB);
-  return db.collection(BirthdayCollectionName());
-}
-
-function BirthdayCollectionName() {
-  return BIRTHDAYS_COLLECTION;
-}
-
-type BirthdayDoc = {
-  _id: ObjectId;
-  utaiteName: string;
-  birthday: string;
-  twitterLink?: string | null;
+const getBirthdaysCollection = async () => {
+    if (!process.env.MONGODB_DB || !process.env.MONGODB_COLLECTION_NAME) {
+        throw new Error('Server configuration error: MONGODB_DB_NAME or MONGODB_COLLECTION_NAME is not set.');
+    }
+    
+    await checkAuth();
+    const client = await clientPromise;
+    const db = client.db(process.env.MONGODB_DB);
+    return db.collection(process.env.MONGODB_COLLECTION_NAME);
 };
 
-function serializeBirthday(doc: BirthdayDoc): Birthday {
-  return {
-    _id: doc._id.toString() as unknown as Birthday['_id'],
-    utaiteName: doc.utaiteName,
-    birthday: doc.birthday,
-    twitterLink: doc.twitterLink ?? '',
-  } as Birthday;
+export async function getBirthdays() {
+    try {
+        const collection = await getBirthdaysCollection();
+        const birthdays = await collection.find({})
+            .collation({ locale: 'en', strength: 2 })
+            .sort({ utaiteName: 1 })
+            .toArray();
+
+        return JSON.parse(JSON.stringify(birthdays));
+    } catch (error) {
+        console.error('getBirthdays failed:', error);
+        if (error instanceof AuthError) {
+             throw new Error(error.message);
+        }
+        throw new Error('Failed to fetch data from the server.');
+    }
 }
 
-function toActionErrors(err: ZodError): ActionState['errors'] {
-  const fieldErrors = err.flatten().fieldErrors as {
-    id?: string[];
-    utaiteName?: string[];
-    birthday?: string[];
-    twitterLink?: string[];
-  };
-  
-  return {
-    id: fieldErrors.id,
-    utaiteName: fieldErrors.utaiteName,
-    birthday: fieldErrors.birthday,
-    twitterLink: fieldErrors.twitterLink,
-  };
+export async function createBirthday(_prevState: State, formData: FormData): Promise<State> {
+    try {
+        await checkAuth();
+    } catch (error) {
+        if (error instanceof AuthError) {
+            return { message: error.message };
+        }
+        return { message: 'An unexpected authentication error occurred.' };
+    }
+
+    const validatedFields = CreateBirthdaySchema.safeParse({
+        utaiteName: formData.get('utaiteName'),
+        birthday: formData.get('birthday'),
+        twitterLink: formData.get('twitterLink'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Failed to create birthday. Please check the fields.',
+        };
+    }
+    
+    const { utaiteName, birthday, twitterLink } = validatedFields.data;
+
+    try {
+        const collection = await getBirthdaysCollection();
+        await collection.insertOne({
+            utaiteName,
+            birthday,
+            twitterLink,
+            createdAt: new Date(),
+        });
+    } catch (error) { 
+        console.error('Database Error (Create):', error);
+        if (error instanceof AuthError) {
+             return { message: error.message };
+        }
+        return { message: 'Database Error: Failed to create birthday.' };
+    }
+
+    revalidatePath('/');
+    return { message: 'Successfully created birthday.' };
 }
 
-function sanitizeTwitterLink(link: string | null | undefined) {
-  const v = (link ?? '').trim();
-  if (!v) return '';
-  return v.replace('https://x.com/', 'https://twitter.com/');
+export async function updateBirthday(_prevState: State, formData: FormData): Promise<State> {
+    try {
+        await checkAuth();
+    } catch (error) {
+        if (error instanceof AuthError) {
+            return { message: error.message };
+        }
+        return { message: 'An unexpected authentication error occurred.' };
+    }
+    
+    const validatedFields = BirthdaySchema.safeParse({
+        id: formData.get('id'),
+        utaiteName: formData.get('utaiteName'),
+        birthday: formData.get('birthday'),
+        twitterLink: formData.get('twitterLink'),
+    });
+    
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Failed to update birthday. Please check the fields.',
+        };
+    }
+    
+    const { id, utaiteName, birthday, twitterLink } = validatedFields.data;
+
+    if (!id) {
+        return { message: 'Missing ID for update.' };
+    }
+
+    try {
+        const collection = await getBirthdaysCollection();
+        await collection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { utaiteName, birthday, twitterLink } }
+        );
+    } catch (error) {
+        console.error('Database Error (Update):', error);
+        if (error instanceof AuthError) {
+             return { message: error.message };
+        }
+        return { message: 'Database Error: Failed to update birthday.' };
+    }
+    
+    revalidatePath('/');
+    return { message: 'Successfully updated birthday.' };
 }
 
-const getBirthdaysCached = unstable_cache(
-  async (): Promise<Birthday[]> => {
-    const col = await getCollection();
-    const docs = (await col
-      .find({})
-      .sort({ utaiteName: 1 })
-      .toArray()) as unknown as BirthdayDoc[];
-
-    return docs.map(serializeBirthday);
-  },
-  ['birthdays'],
-  { revalidate: 60, tags: ['birthdays'] }
-);
-
-export async function getBirthdays(): Promise<Birthday[]> {
-  'use server';
-  try {
-    return await getBirthdaysCached();
-  } catch (err) {
-    throw err;
-  }
-}
-
-export async function createBirthday(
-  _prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  'use server';
-
-  try {
-    const payload = {
-      utaiteName: (formData.get('utaiteName') as string | null) ?? '',
-      birthday: (formData.get('birthday') as string | null) ?? '',
-      twitterLink: (formData.get('twitterLink') as string | null) ?? '',
-    };
-
-    const parsed = BirthdaySchema.safeParse(payload);
-    if (!parsed.success) {
-      return {
-        success: false,
-        message: 'Validation error',
-        errors: toActionErrors(parsed.error),
-      };
+export async function deleteBirthday(id: string): Promise<{ message: string }> {
+    try {
+        await checkAuth();
+    } catch (error) {
+        if (error instanceof AuthError) {
+            return { message: error.message };
+        }
+        return { message: 'An unexpected authentication error occurred.' };
     }
 
-    const col = await getCollection();
-    const doc: Omit<BirthdayDoc, '_id'> = {
-      utaiteName: parsed.data.utaiteName.trim(),
-      birthday: parsed.data.birthday.trim(),
-      twitterLink: sanitizeTwitterLink(parsed.data.twitterLink),
-    };
-
-    await col.insertOne(doc as any);
-
-    revalidateTag('birthdays');
-
-    return {
-      success: true,
-      message: `Success: Created birthday for ${doc.utaiteName}`,
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      message: `Error: ${err?.message ?? 'Failed to create birthday'}`,
-    };
-  }
-}
-
-export async function updateBirthday(
-  _prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  'use server';
-
-  try {
-    const payload = {
-      id: (formData.get('id') as string | null) ?? '',
-      utaiteName: (formData.get('utaiteName') as string | null) ?? '',
-      birthday: (formData.get('birthday') as string | null) ?? '',
-      twitterLink: (formData.get('twitterLink') as string | null) ?? '',
-    };
-
-    const parsed = BirthdaySchema.safeParse(payload);
-    if (!parsed.success) {
-      return {
-        success: false,
-        message: 'Validation error',
-        errors: toActionErrors(parsed.error),
-      };
+    if (!id) {
+        return { message: 'Missing ID for deletion.' };
     }
 
-    if (!payload.id || !ObjectId.isValid(payload.id)) {
-      return {
-        success: false,
-        message: 'Validation error',
-        errors: { id: ['Invalid or missing id.'] },
-      };
+    try {
+        const collection = await getBirthdaysCollection();
+        await collection.deleteOne({ _id: new ObjectId(id) });
+    } catch (error) {
+        console.error('Database Error (Delete):', error);
+        if (error instanceof AuthError) {
+             return { message: error.message };
+        }
+        return { message: 'Database Error: Failed to delete birthday.' };
     }
-
-    const col = await getCollection();
-    const _id = new ObjectId(payload.id);
-
-    const update = {
-      $set: {
-        utaiteName: parsed.data.utaiteName.trim(),
-        birthday: parsed.data.birthday.trim(),
-        twitterLink: sanitizeTwitterLink(parsed.data.twitterLink),
-      },
-    };
-
-    const res = await col.updateOne({ _id }, update);
-
-    if (res.matchedCount === 0) {
-      return { success: false, message: 'Error: Birthday not found.' };
-    }
-
-    revalidateTag('birthdays');
-
-    return {
-      success: true,
-      message: 'Success: Updated birthday',
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      message: `Error: ${err?.message ?? 'Failed to update birthday'}`,
-    };
-  }
-}
-
-export async function deleteBirthday(id: string): Promise<ActionState> {
-  'use server';
-
-  try {
-    if (!id || !ObjectId.isValid(id)) {
-      return {
-        success: false,
-        message: 'Error: Invalid id.',
-        errors: { id: ['Invalid id.'] },
-      };
-    }
-
-    const col = await getCollection();
-    const _id = new ObjectId(id);
-    const res = await col.deleteOne({ _id });
-
-    if (res.deletedCount === 0) {
-      return { success: false, message: 'Error: Birthday not found.' };
-    }
-
-    revalidateTag('birthdays');
-
-    return { success: true, message: 'Success: Deleted birthday' };
-  } catch (err: any) {
-    return {
-      success: false,
-      message: `Error: ${err?.message ?? 'Failed to delete birthday'}`,
-    };
-  }
+    
+    revalidatePath('/');
+    return { message: 'Successfully deleted birthday.' };
 }
