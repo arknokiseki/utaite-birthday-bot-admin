@@ -15,7 +15,7 @@ export default async function Home() {
     <>
       <main className="container mx-auto py-10">
         <h1 className="text-3xl font-bold mb-6 select-none pointer-events-none">
-          Utaite Birthday Bot Admin Dashboard
+          Dashboard
         </h1>
         <BirthdayPageClient initialBirthdays={bdays} />
       </main>

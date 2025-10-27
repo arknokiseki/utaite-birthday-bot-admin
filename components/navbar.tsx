@@ -16,7 +16,7 @@ export function Navbar() {
         <nav className="border-b">
             <div className="container mx-auto flex items-center justify-between h-16 px-4">
                 <h1 className="text-xl font-bold select-none pointer-events-none">
-                    Utaite Birthday Bot Admin Dashboard
+                    Utaite Birthday Bot
                 </h1>
                 <div className="flex items-center space-x-2">
                     <ThemeToggle />

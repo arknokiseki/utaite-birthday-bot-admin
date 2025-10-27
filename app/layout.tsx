@@ -22,8 +22,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Utaite Birthday Notifier',
-    default: 'Admin Dashboard | Utaite Birthday Notifier',
+    template: '%s | Utaite Birthday Notifier Bot',
+    default: 'Admin Dashboard | Utaite Birthday Notifier Bot',
   },
   description: 'The admin dashboard for the Utaite Wiki Project\'s Birthday Notifier Bot.',
   // icons: { icon: "/favicon.ico" },
