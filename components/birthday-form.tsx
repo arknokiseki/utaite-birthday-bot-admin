@@ -341,6 +341,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             className="w-[200px] p-0" 
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
+                                            onWheel={(e) => e.stopPropagation()}
                                         >
                                             <Command className="max-h-[300px]">
                                                 <CommandInput placeholder="Search month..." />
@@ -389,6 +390,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             className="w-[150px] p-0" 
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
+                                            onWheel={(e) => e.stopPropagation()}
                                         >
                                             <Command className="max-h-[300px]">
                                                 <CommandInput placeholder="Search day..." />
