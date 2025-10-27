@@ -214,7 +214,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
     today.setHours(0, 0, 0, 0);
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
             <DialogContent className="sm:max-w-[425px] w-[95%]">
                 <DialogHeader>
                     <DialogTitle>{isEditMode ? 'Edit Birthday' : 'Add New Birthday'}</DialogTitle>
@@ -293,6 +293,8 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             align="end"
                                             alignOffset={-8}
                                             sideOffset={10}
+                                            style={{ pointerEvents: 'auto', zIndex: 9999 }}
+                                            onOpenAutoFocus={(e) => e.preventDefault()} 
                                         >
                                             <Calendar
                                                 mode="single"
@@ -332,7 +334,12 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[200px] p-0" align="start">
+                                        <PopoverContent 
+                                            className="w-[200px] p-0" 
+                                            align="start"
+                                            style={{ pointerEvents: 'auto', zIndex: 9999 }}
+                                            onOpenAutoFocus={(e) => e.preventDefault()}
+                                        >
                                             <Command>
                                                 <CommandInput placeholder="Search month..." />
                                                 <CommandList>
@@ -376,7 +383,12 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[150px] p-0" align="start">
+                                        <PopoverContent 
+                                            className="w-[150px] p-0" 
+                                            align="start"
+                                            style={{ pointerEvents: 'auto', zIndex: 9999 }}
+                                            onOpenAutoFocus={(e) => e.preventDefault()}
+                                        >
                                             <Command>
                                                 <CommandInput placeholder="Search day..." />
                                                 <CommandList>
