@@ -342,9 +342,9 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
                                         >
-                                            <Command>
+                                            <Command className="max-h-[300px]">
                                                 <CommandInput placeholder="Search month..." />
-                                                <CommandList className="max-h-[300px] overflow-y-auto">
+                                                <CommandList>
                                                     <CommandEmpty>No month found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {MONTHS.map((month) => (
@@ -390,9 +390,9 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
                                         >
-                                            <Command>
+                                            <Command className="max-h-[300px]">
                                                 <CommandInput placeholder="Search day..." />
-                                                <CommandList className="max-h-[300px] overflow-y-auto">
+                                                <CommandList>
                                                     <CommandEmpty>No day found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {getDaysInMonth(selectedMonth).map((day) => (
