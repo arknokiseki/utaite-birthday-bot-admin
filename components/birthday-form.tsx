@@ -107,6 +107,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
     );
     const [selectedMonth, setSelectedMonth] = useState<string>('');
     const [selectedDay, setSelectedDay] = useState<string>('');
+    const [isInitializing, setIsInitializing] = useState(false);
     const [monthOpen, setMonthOpen] = useState(false);
     const [dayOpen, setDayOpen] = useState(false);
     const [calendarOpen, setCalendarOpen] = useState(false);
@@ -127,6 +128,7 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
     // Initialize date inputs from existing birthday
     useEffect(() => {
         if (birthday?.birthday) {
+            setIsInitializing(true);
             const parts = birthday.birthday.split('-');
             if (parts.length === 3) {
                 // YYYY-MM-DD format
@@ -141,6 +143,8 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                 setSelectedDay(parts[1]);
                 setDateFormat('without-year');
             }
+            // Small delay to ensure state is set before clearing initialization flag
+            setTimeout(() => setIsInitializing(false), 0);
         }
     }, [birthday]);
 
@@ -187,12 +191,12 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
         }
     }, [dateFormat, selectedDate, selectedMonth, selectedDay, setValue]);
 
-    // Reset day when month changes
+    // Reset day when month changes (but not during initialization)
     useEffect(() => {
-        if (dateFormat === 'without-year') {
+        if (dateFormat === 'without-year' && !isInitializing) {
             setSelectedDay('');
         }
-    }, [selectedMonth, dateFormat]);
+    }, [selectedMonth, dateFormat, isInitializing]);
 
     const getDaysInMonth = (monthValue: string) => {
         const month = MONTHS.find(m => m.value === monthValue);
@@ -294,7 +298,6 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             alignOffset={-8}
                                             sideOffset={10}
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
-                                            onOpenAutoFocus={(e) => e.preventDefault()} 
                                         >
                                             <Calendar
                                                 mode="single"
@@ -338,11 +341,10 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             className="w-[200px] p-0" 
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
-                                            onOpenAutoFocus={(e) => e.preventDefault()}
                                         >
                                             <Command>
                                                 <CommandInput placeholder="Search month..." />
-                                                <CommandList>
+                                                <CommandList className="max-h-[300px] overflow-y-auto">
                                                     <CommandEmpty>No month found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {MONTHS.map((month) => (
@@ -387,11 +389,10 @@ export function BirthdayForm({ isOpen, setIsOpen, birthday, onSuccess }: Birthda
                                             className="w-[150px] p-0" 
                                             align="start"
                                             style={{ pointerEvents: 'auto', zIndex: 9999 }}
-                                            onOpenAutoFocus={(e) => e.preventDefault()}
                                         >
                                             <Command>
                                                 <CommandInput placeholder="Search day..." />
-                                                <CommandList>
+                                                <CommandList className="max-h-[300px] overflow-y-auto">
                                                     <CommandEmpty>No day found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {getDaysInMonth(selectedMonth).map((day) => (
