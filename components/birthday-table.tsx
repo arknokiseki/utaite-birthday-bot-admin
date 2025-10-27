@@ -100,6 +100,24 @@ const Header = ({
     );
 };
 
+// Helper function to parse birthday string into comparable values
+const parseBirthday = (birthday: string) => {
+    const parts = birthday.split('-');
+    let month: number, day: number;
+    
+    if (parts.length === 3) {
+        // Format: YYYY-MM-DD
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+    } else {
+        // Format: MM-DD
+        month = parseInt(parts[0], 10);
+        day = parseInt(parts[1], 10);
+    }
+    
+    return { month, day };
+};
+
 export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoading }: { initialBirthdays: Birthday[], filters: FilterValues, onDataChange: () => void, isLoading: boolean }) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
@@ -160,16 +178,34 @@ export function BirthdayTable({ initialBirthdays, filters, onDataChange, isLoadi
         }
 
         const sorted = [...filtered].sort((a, b) => {
-            const aValue = a[sorting.key];
-            const bValue = b[sorting.key];
+            if (sorting.key === 'birthday') {
+                const parsedA = parseBirthday(a.birthday);
+                const parsedB = parseBirthday(b.birthday);
+                
+                // Compare by month first
+                if (parsedA.month !== parsedB.month) {
+                    return sorting.direction === 'ascending' 
+                        ? parsedA.month - parsedB.month 
+                        : parsedB.month - parsedA.month;
+                }
+                
+                // If months are equal, compare by day
+                return sorting.direction === 'ascending' 
+                    ? parsedA.day - parsedB.day 
+                    : parsedB.day - parsedA.day;
+            } else {
+                // Sort by name (original logic)
+                const aValue = a[sorting.key];
+                const bValue = b[sorting.key];
 
-            if (aValue < bValue) {
-                return sorting.direction === 'ascending' ? -1 : 1;
+                if (aValue < bValue) {
+                    return sorting.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sorting.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
             }
-            if (aValue > bValue) {
-                return sorting.direction === 'ascending' ? 1 : -1;
-            }
-            return 0;
         });
 
         return sorted;
