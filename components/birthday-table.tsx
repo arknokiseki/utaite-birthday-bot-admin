@@ -16,7 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// import { BirthdayForm } from './birthday-form';
+import { BirthdayForm } from './birthday-form';
 import { deleteBirthday } from '@/lib/actions';
 import { Birthday, FilterValues } from '@/lib/definitions';
 import { PaginationControls } from './pagination-controls';
@@ -27,10 +27,10 @@ import dynamic from 'next/dynamic';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareTwitter } from '@fortawesome/free-brands-svg-icons'
 
-const BirthdayForm = dynamic(
-  () => import('./birthday-form').then(m => m.BirthdayForm),
-  { ssr: false, loading: () => null }
-);
+// const BirthdayForm = dynamic(
+//   () => import('./birthday-form').then(m => m.BirthdayForm),
+//   { ssr: false, loading: () => null }
+// );
 
 const SkeletonRow = () => (
     <TableRow>
