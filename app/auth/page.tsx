@@ -33,10 +33,10 @@ export default function AuthPage() {
                 <form onSubmit={handleSignIn}>
                     <div className="bg-card text-card-foreground shadow-md rounded-lg px-6 pt-6 pb-8 mb-4">
                         <div className="mb-6 text-center">
-                            <h1 className="text-2xl font-bold">Admin Login</h1>
+                            <h1 className="text-2xl font-bold">ログイン</h1>
                         </div>
                         <div className="mb-4">
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username">ユーザー名</Label>
                             <Input
                                 id="username"
                                 type="text"
@@ -48,7 +48,7 @@ export default function AuthPage() {
                             />
                         </div>
                         <div className="mb-6">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">パスワード</Label>
                             <Input
                                 id="password"
                                 type="password"
